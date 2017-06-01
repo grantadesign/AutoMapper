@@ -350,9 +350,12 @@ namespace AutoMapper
                 _typeMapCache[typeMapPair] = typeMap;
             }
             // Due to the inheritance we can have derrived mapping cached which is not valid for this source object
-            else if (source != null && typeMap != null && !typeMap.SourceType.IsAssignableFrom(source.GetType()))
+            else if (source != null && typeMap != null && !typeMap.SourceType.IsInstanceOfType(source))
             {
-                typeMap = FindTypeMapFor(source, destination, source.GetType(), destinationType);
+                // peterc modified due to MI-12343
+                typeMap = sourceType != source.GetType() 
+                    ? FindTypeMapFor(source, destination, source.GetType(), destinationType) // recurse: try the "real" source type
+                    : FindTypeMap(source, destination, sourceType, destinationType, DefaultProfileName); // cache is wrong: find the type the hard way
             }
 
             if (typeMap == null && destination != null && destination.GetType() != destinationType)
